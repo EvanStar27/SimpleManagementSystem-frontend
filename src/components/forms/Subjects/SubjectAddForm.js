@@ -14,51 +14,54 @@ import {
   useColorModeValue,
   FormHelperText,
   useToast,
+  Select,
 } from "@chakra-ui/react";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import { useQueryClient } from "react-query";
-import { useUpdateCourse } from "../../../hooks/CourseHooks";
+import { useAddNewSubject } from "../../../hooks/SubjectHooks";
+import { useFetchAllCourses } from "../../../hooks/CourseHooks";
 
-const CourseEditForm = ({ course, isOpen, onClose, title }) => {
+const SubjectAddForm = ({ isOpen, onClose, title }) => {
   const toast = useToast();
   const queryClient = useQueryClient();
 
   const formik = useFormik({
-    enableReinitialize: true,
-    initialValues: course,
+    initialValues: {
+      subjectName: "",
+      courseId: 0,
+    },
+
     validationSchema: yup.object({
-      courseName: yup
-        .string()
-        .matches(
-          /^[a-zA-Z ]*$/,
-          "Course Name must not contain numbers or special characters"
-        )
-        .required("Course Name is required"),
-      description: yup.string().required("Course Description is required"),
+      subjectName: yup.string().required("Subject Name is required"),
+      courseId: yup.number().required("Course  is required"),
     }),
 
     onSubmit: (values) => {
-      courseQuery.mutate(values);
+      values.courseId = parseInt(values.courseId);
+      subjectQuery.mutate(values);
     },
   });
 
   const onSuccess = (data) => {
-    queryClient.invalidateQueries("fetch_all_courses");
+    queryClient.invalidateQueries("fetch_all_subjects");
     onClose();
     toast({
       position: "top",
       variant: "left-accent",
       title: "Success",
-      description: "Course Updated Successfully",
+      description: "New subject added successfully",
       status: "success",
       duration: 5000,
       isClosable: true,
     });
+    formik.resetForm();
     return data;
   };
 
-  const courseQuery = useUpdateCourse(onSuccess);
+  // Queries
+  const subjectQuery = useAddNewSubject(onSuccess);
+  const courseQuery = useFetchAllCourses("");
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -69,33 +72,37 @@ const CourseEditForm = ({ course, isOpen, onClose, title }) => {
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
-              <FormLabel>Course Name</FormLabel>
+              <FormLabel>Subject Name</FormLabel>
               <Input
                 type="text"
                 focusBorderColor={useColorModeValue("blue.500", "blue.200")}
                 bg={useColorModeValue("white", "whiteAlpha.100")}
-                name="courseName"
-                {...formik.getFieldProps("courseName")}
+                name="subjectName"
+                {...formik.getFieldProps("subjectName")}
               />
               <FormHelperText color={useColorModeValue("red.500", "red.200")}>
-                {formik.touched.courseName && formik.errors.courseName
-                  ? formik.errors.courseName
+                {formik.touched.subjectName && formik.errors.subjectName
+                  ? formik.errors.subjectName
                   : ""}
               </FormHelperText>
             </FormControl>
 
             <FormControl mt={4}>
-              <FormLabel>Course Description</FormLabel>
-              <Input
-                type="text"
-                focusBorderColor={useColorModeValue("blue.500", "blue.200")}
-                bg={useColorModeValue("white", "whiteAlpha.100")}
-                name="description"
-                {...formik.getFieldProps("description")}
-              />
+              <FormLabel>Course</FormLabel>
+              <Select
+                name="courseId"
+                placeholder="Select Course"
+                {...formik.getFieldProps("courseId")}
+              >
+                {courseQuery.data?.data.map((course) => (
+                  <option key={course.courseId} value={course.courseId}>
+                    {course.courseName}
+                  </option>
+                ))}
+              </Select>
               <FormHelperText color={useColorModeValue("red.500", "red.200")}>
-                {formik.touched.description && formik.errors.description
-                  ? formik.errors.description
+                {formik.touched.courseId && formik.errors.courseId
+                  ? formik.errors.courseId
                   : ""}
               </FormHelperText>
             </FormControl>
@@ -103,7 +110,7 @@ const CourseEditForm = ({ course, isOpen, onClose, title }) => {
 
           <ModalFooter>
             <Button type="submit" colorScheme="blue" mr={3}>
-              Update
+              Add
             </Button>
             <Button variant="outline" onClick={onClose}>
               Close
@@ -115,4 +122,4 @@ const CourseEditForm = ({ course, isOpen, onClose, title }) => {
   );
 };
 
-export default CourseEditForm;
+export default SubjectAddForm;

@@ -21,64 +21,98 @@ import { useFormik } from "formik";
 import * as yup from "yup";
 import { useQueryClient } from "react-query";
 import {
-  useEnrollCourse,
   useFetchAllCourses,
+  useUpdateEnrolledCourse,
 } from "../../../hooks/CourseHooks";
 import { useFetchSubjectsByCourseId } from "../../../hooks/SubjectHooks";
 
-const EnrollForm = ({ student, initSubject, isOpen, onClose, title }) => {
+const UpdateEnrollForm = ({
+  student,
+  initSubject,
+  courseIds,
+  isOpen,
+  onClose,
+  title,
+}) => {
   const toast = useToast();
   const queryClient = useQueryClient();
 
-  const courseIds = initSubject
-    ?.map((course) => course.courseId)
-    .filter((value, index, self) => self.indexOf(value) === index); // Get Unique Ids
+  // disable only enrolled courses not the currently selected
+  courseIds = courseIds?.filter((value) => value !== initSubject[0]?.courseId);
 
-  console.log(courseIds);
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
+      csMappingId: initSubject[0]?.csMappingId,
       studentId: student.studentId,
-      courseId: 0,
-      subjects: [],
+      courseId: initSubject[0]?.courseId,
+      subjectList:
+        initSubject?.map((subject) => parseInt(subject.subjectId)) || [],
     },
 
     validationSchema: yup.object({
       studentId: yup.number().required("Student is required"),
       courseId: yup.number().required("Course is required"),
-      subjects: yup.array().min(1, "Please select a subject"),
+      subjectList: yup.array().min(1, "Please select a subject"),
     }),
 
     onSubmit: (values) => {
-      values.subjects = values.subjects.map((id) => parseInt(id));
-      values.subjects = JSON.stringify(values.subjects);
+      values.csMappingId = parseInt(values.csMappingId);
+      values.studentId = parseInt(values.studentId);
       values.courseId = parseInt(values.courseId);
       enrollQuery.mutate(values);
     },
   });
 
   const onSuccess = (data) => {
-    queryClient.invalidateQueries("fetch_all_students");
-    queryClient.invalidateQueries("fetch_chart_stats");
+    formik.resetForm();
     queryClient.invalidateQueries("fetch_subjects_by_student_id");
+
     onClose();
     toast({
       position: "top",
       variant: "left-accent",
       title: "Success",
-      description: "Student Enrolled Successfully",
+      description: "Course Enrolled Updated Successfully",
       status: "success",
       duration: 5000,
       isClosable: true,
     });
-    formik.resetForm();
     return data;
   };
 
   // Queries
-  const enrollQuery = useEnrollCourse(onSuccess);
+  const enrollQuery = useUpdateEnrolledCourse(onSuccess);
   const courseQuery = useFetchAllCourses("");
-  const subjectQuery = useFetchSubjectsByCourseId(formik.values.courseId);
+  const subjectQuery = useFetchSubjectsByCourseId(formik.values.courseId || 0);
+
+  // Handlers
+  const handleCourseChange = () => {
+    if (
+      parseInt(formik.values.courseId) === parseInt(initSubject[0]?.courseId)
+    ) {
+      formik.setFieldValue(
+        "subjectList",
+        initSubject?.map((subject) => parseInt(subject.subjectId))
+      );
+    } else formik.setFieldValue("subjectList", []);
+  };
+
+  const handleSubjectChange = (e) => {
+    if (e.target.checked) {
+      formik.setFieldValue("subjectList", [
+        ...formik.values.subjectList,
+        parseInt(e.target.value),
+      ]);
+    } else {
+      formik.setFieldValue(
+        "subjectList",
+        formik.values.subjectList.filter(
+          (sub) => parseInt(sub) !== parseInt(e.target.value)
+        )
+      );
+    }
+  };
 
   // Theme
   let errClr = useColorModeValue("red.500", "red.200");
@@ -97,6 +131,7 @@ const EnrollForm = ({ student, initSubject, isOpen, onClose, title }) => {
                 name="courseId"
                 placeholder="Select Course"
                 {...formik.getFieldProps("courseId")}
+                onClick={handleCourseChange}
               >
                 {courseQuery.data?.data.map((course) => (
                   <option
@@ -123,9 +158,15 @@ const EnrollForm = ({ student, initSubject, isOpen, onClose, title }) => {
                     return (
                       <Checkbox
                         key={subject.subjectId}
-                        name="subjects[]"
-                        {...formik.getFieldProps("subjects")}
-                        value={subject.subjectId}
+                        name="subjectList[]"
+                        // {...formik.getFieldProps("subjectList")}
+                        value={parseInt(subject.subjectId)}
+                        defaultChecked={
+                          formik.values.subjectList?.includes(subject.subjectId)
+                            ? true
+                            : false
+                        }
+                        onChange={(e) => handleSubjectChange(e)}
                       >
                         {subject.subjectName}
                       </Checkbox>
@@ -133,8 +174,8 @@ const EnrollForm = ({ student, initSubject, isOpen, onClose, title }) => {
                   })}
                 </Flex>
                 <FormHelperText color={errClr}>
-                  {formik.touched.subjects && formik.errors.subjects
-                    ? formik.errors.subjects
+                  {formik.touched.subjectList && formik.errors.subjectList
+                    ? formik.errors.subjectList
                     : ""}
                 </FormHelperText>
               </FormControl>
@@ -143,7 +184,7 @@ const EnrollForm = ({ student, initSubject, isOpen, onClose, title }) => {
 
           <ModalFooter>
             <Button type="submit" colorScheme="blue" mr={3}>
-              Enroll
+              Update
             </Button>
             <Button variant="outline" onClick={onClose}>
               Close
@@ -155,4 +196,4 @@ const EnrollForm = ({ student, initSubject, isOpen, onClose, title }) => {
   );
 };
 
-export default EnrollForm;
+export default UpdateEnrollForm;

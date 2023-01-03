@@ -1,15 +1,15 @@
-import { Flex } from '@chakra-ui/react'
-import React from 'react'
-import LoginForm from '../../components/forms/LoginForm'
+import { VStack } from "@chakra-ui/react";
+import React from "react";
+import LoginForm from "../../components/forms/LoginForm";
 
 const Login = () => {
   return (
     <>
-      <Flex h="100vh" justifyContent="center" alignItems="center">
+      <VStack mt={28}>
         <LoginForm />
-      </Flex>
+      </VStack>
     </>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

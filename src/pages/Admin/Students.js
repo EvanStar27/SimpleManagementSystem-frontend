@@ -1,5 +1,5 @@
-import React from 'react'
-import { useFetchAllStudents } from '../../hooks/StudentHooks'
+import React from "react";
+import { useFetchAllStudents } from "../../hooks/StudentHooks";
 import {
   Table,
   Thead,
@@ -17,53 +17,64 @@ import {
   useColorModeValue,
   Text,
   Center,
-} from '@chakra-ui/react'
+  Avatar,
+  Menu,
+  MenuButton,
+  IconButton,
+  MenuList,
+  MenuItem,
+} from "@chakra-ui/react";
 import {
-  HiOutlineBookOpen,
+  HiOutlineEllipsisVertical,
+  HiOutlineEye,
   HiOutlinePencil,
   HiOutlinePlus,
   HiOutlineTrash,
-} from 'react-icons/hi2'
-import StudentAddForm from '../../components/forms/Students/StudentAddForm'
-import { useState } from 'react'
-import StudentEditForm from '../../components/forms/Students/StudentEditForm'
-import StudentDeleteForm from '../../components/forms/Students/StudentDeleteForm'
-import EnrollForm from '../../components/forms/Students/EnrollForm'
+} from "react-icons/hi2";
+import StudentAddForm from "../../components/forms/Students/StudentAddForm";
+import { useState } from "react";
+import StudentEditForm from "../../components/forms/Students/StudentEditForm";
+import StudentDeleteForm from "../../components/forms/Students/StudentDeleteForm";
+import { Link } from "react-router-dom";
+import StudentPhotoForm from "../../components/forms/Students/StudentPhotoForm";
 
-const Students = () => {
+const Students = ({ isTab }) => {
   // States
-  const [student, setStudent] = useState({})
-  const [search, setSearch] = useState('')
+  const [student, setStudent] = useState({});
+  const [search, setSearch] = useState("");
+  const [isUpdated, setIsUpdated] = useState(false);
 
   // Queries
-  const { isLoading, isSuccess, data } = useFetchAllStudents(search)
+  const { isLoading, isSuccess, data } = useFetchAllStudents(search);
 
   // Theme
-  let theadBgColor = useColorModeValue('blue.500', 'blue.200')
-  let theadFntColor = useColorModeValue('white', 'black')
-  let boxBg = useColorModeValue('white', 'darkAlpha')
+  let theadBgColor = useColorModeValue("blue.400", "blue.200");
+  let theadFntColor = useColorModeValue("gray.500", "gray.500");
+  let boxBg = useColorModeValue("white", "darkAlpha");
+  let stripeColor = useColorModeValue("gray.100", "#383838");
 
   // Modals
-  const addModal = useDisclosure()
-  const editModal = useDisclosure()
-  const deleteModal = useDisclosure()
-  const enrollModal = useDisclosure()
+  const addModal = useDisclosure();
+  const editModal = useDisclosure();
+  const deleteModal = useDisclosure();
+  const photoModal = useDisclosure();
 
   // handlers
   const handleEditStudent = (student) => {
-    setStudent(student)
-    editModal.onOpen()
-  }
-
-  const handleEnroll = (student) => {
-    setStudent(student)
-    enrollModal.onOpen()
-  }
+    setStudent(student);
+    editModal.onOpen();
+  };
 
   const handleDeleteStudent = (student) => {
-    setStudent(student)
-    deleteModal.onOpen()
-  }
+    setStudent(student);
+    deleteModal.onOpen();
+  };
+
+  const handleAvatarClicked = (student) => {
+    setIsUpdated(false);
+    setStudent(student);
+    photoModal.onOpen();
+  };
 
   return isSuccess && !isLoading ? (
     <>
@@ -88,24 +99,27 @@ const Students = () => {
         onClose={deleteModal.onClose}
       />
 
-      <EnrollForm
+      <StudentPhotoForm
         student={student}
-        title="Enroll to Course"
-        isOpen={enrollModal.isOpen}
-        onClose={enrollModal.onClose}
+        title="Update Student Photo"
+        isOpen={photoModal.isOpen}
+        onClose={photoModal.onClose}
+        setIsUpdated={setIsUpdated}
       />
 
       {/* Content */}
-      <Heading size="md" mt={24} letterSpacing="wider">
-        Students
-      </Heading>
+      {!isTab ? (
+        <Heading size="md" mt={24} letterSpacing="wider">
+          Students
+        </Heading>
+      ) : null}
 
       <Box bg={boxBg} mt={4} mb={16} p={4} shadow="md" rounded="lg">
-        <Flex mt={4} justifyContent="space-between">
-          <Button colorScheme="blue" onClick={addModal.onOpen}>
+        <Flex mt={4} justifyContent="end">
+          {/* <Button colorScheme="blue" onClick={addModal.onOpen}>
             <HiOutlinePlus size={24} />
             &nbsp; Add New
-          </Button>
+          </Button> */}
 
           <Input
             w={64}
@@ -118,44 +132,78 @@ const Students = () => {
         {data?.data?.length ? (
           <TableContainer mt={4}>
             <Table variant="unstyled">
-              <Thead bg={theadBgColor}>
+              <Thead>
                 <Tr>
                   <Th isNumeric color={theadFntColor}>
                     ID
                   </Th>
-                  <Th color={theadFntColor}>First Name</Th>
-                  <Th color={theadFntColor}>Last Name</Th>
+                  <Th color={theadFntColor}>Name</Th>
                   <Th color={theadFntColor}>Gender</Th>
                   <Th color={theadFntColor}>Actions</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {data?.data.map((student) => (
-                  <Tr key={student.studentId}>
+                  <Tr
+                    key={student.studentId}
+                    _odd={{
+                      bg: stripeColor,
+                    }}
+                  >
                     <Td isNumeric>{student.studentId}</Td>
-                    <Td>{student.firstName}</Td>
-                    <Td>{student.lastName}</Td>
+                    <Td>
+                      <Flex alignItems="center" gap={4}>
+                        <Avatar
+                          name={student.firstName + " " + student.lastName}
+                          src={`http://localhost:8080/api/v1/files/download/photo/${student.studentId}?updated=${isUpdated}`} // isUpdated for browser cache to reload
+                          _hover={{
+                            cursor: "pointer",
+                            ring: 4,
+                            ringColor: "blue.200",
+                          }}
+                          onClick={() => handleAvatarClicked(student)}
+                        />
+                        <span>
+                          {student.firstName} {student.lastName}
+                        </span>
+                      </Flex>
+                    </Td>
                     <Td>{student.gender}</Td>
                     <Td>
                       <Flex gap={4}>
                         <Button
+                          colorScheme="blue"
                           variant="outline"
                           onClick={() => handleEditStudent(student)}
                         >
                           <HiOutlinePencil />
                         </Button>
                         <Button
+                          colorScheme="pink"
                           variant="outline"
                           onClick={() => handleDeleteStudent(student)}
                         >
                           <HiOutlineTrash />
                         </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => handleEnroll(student)}
-                        >
-                          <HiOutlineBookOpen />
-                        </Button>
+
+                        <Menu>
+                          <MenuButton
+                            as={IconButton}
+                            aria-label="Actions"
+                            icon={<HiOutlineEllipsisVertical />}
+                            variant="outline"
+                            colorScheme="orange"
+                          />
+                          <MenuList>
+                            <MenuItem
+                              icon={<HiOutlineEye />}
+                              as={Link}
+                              to={`/admin/management/students/${student.studentId}`}
+                            >
+                              View
+                            </MenuItem>
+                          </MenuList>
+                        </Menu>
                       </Flex>
                     </Td>
                   </Tr>
@@ -163,10 +211,10 @@ const Students = () => {
               </Tbody>
             </Table>
           </TableContainer>
-        ) : data?.data?.length === 0 && search !== '' ? (
+        ) : data?.data?.length === 0 && search !== "" ? (
           <>
             <Text size="md" mt={4}>
-              Searching for{' '}
+              Searching for{" "}
               <strong>
                 <q>{search}</q>
               </strong>
@@ -192,7 +240,7 @@ const Students = () => {
     </>
   ) : (
     <Heading mt={24}>Loading...</Heading>
-  )
-}
+  );
+};
 
-export default Students
+export default Students;

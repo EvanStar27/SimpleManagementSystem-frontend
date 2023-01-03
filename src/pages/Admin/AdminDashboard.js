@@ -10,15 +10,16 @@ import {
   Tabs,
   useBreakpointValue,
   useColorModeValue,
-} from '@chakra-ui/react'
-import React from 'react'
-import AdminStats from '../../components/AdminStats'
-import CourseChart from '../../components/CourseChart'
-import CoursesTab from './CoursesTab'
-import StudentsTab from './StudentsTab'
+} from "@chakra-ui/react";
+import React from "react";
+import AdminStats from "../../components/AdminStats";
+import CourseChart from "../../components/CourseChart";
+import Courses from "./Courses";
+import Students from "./Students";
+import Subjects from "./Subjects";
 
 const AdminDashboard = () => {
-  const gridBP = useBreakpointValue({ sm: 'repeat(1, 1fr)', lg: '1fr 40%' })
+  const gridBP = useBreakpointValue({ sm: "repeat(1, 1fr)", lg: "60% 1fr" });
 
   return (
     <>
@@ -29,7 +30,7 @@ const AdminDashboard = () => {
         <GridItem>
           <Box
             maxHeight="300px"
-            bg={useColorModeValue('white', 'darkAlpha')}
+            bg={useColorModeValue("white", "darkAlpha")}
             p={4}
             rounded="md"
             shadow="md"
@@ -45,20 +46,24 @@ const AdminDashboard = () => {
       <Tabs mt={8}>
         <TabList>
           <Tab>Courses</Tab>
+          <Tab>Subjects</Tab>
           <Tab>Students</Tab>
         </TabList>
 
         <TabPanels mt={8}>
           <TabPanel p={0}>
-            <CoursesTab />
+            <Courses isTab={true} />
           </TabPanel>
           <TabPanel p={0}>
-            <StudentsTab />
+            <Subjects isTab={true} />
+          </TabPanel>
+          <TabPanel p={0}>
+            <Students isTab={true} />
           </TabPanel>
         </TabPanels>
       </Tabs>
     </>
-  )
-}
+  );
+};
 
-export default AdminDashboard
+export default AdminDashboard;

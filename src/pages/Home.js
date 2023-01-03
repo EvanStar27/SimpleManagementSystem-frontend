@@ -6,9 +6,9 @@ import {
   Heading,
   Text,
   useColorModeValue,
-} from '@chakra-ui/react'
-import React from 'react'
-import { Link } from 'react-router-dom'
+} from "@chakra-ui/react";
+import React from "react";
+import { Link } from "react-router-dom";
 
 const Home = () => {
   return (
@@ -25,7 +25,7 @@ const Home = () => {
               as="h1"
               size="4xl"
               fontWeight="bold"
-              color={useColorModeValue('blue.500', 'blue.200')}
+              color={useColorModeValue("blue.500", "blue.200")}
               align="center"
             >
               Simple
@@ -36,7 +36,7 @@ const Home = () => {
               as="h1"
               size="4xl"
               fontWeight="bold"
-              color={useColorModeValue('blue.500', 'blue.200')}
+              color={useColorModeValue("blue.500", "blue.200")}
               align="center"
             >
               Management System
@@ -48,7 +48,7 @@ const Home = () => {
               fontSize="xl"
               fontWeight="semibold"
               align="center"
-              color="slategray"
+              color="gray.500"
             >
               Full Stack Management System using Spring Boot, ReactJS and MySQL
             </Text>
@@ -64,7 +64,7 @@ const Home = () => {
         </Box>
       </Flex>
     </>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;

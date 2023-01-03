@@ -14,15 +14,19 @@ import {
 } from "@chakra-ui/react";
 import { useFormik } from "formik";
 import React from "react";
-import { Link as ReachLink } from "react-router-dom";
+import { Link as ReachLink, useNavigate } from "react-router-dom";
 import * as yup from "yup";
-import { useLoginUser } from "../../hooks/AuthHooks";
+import { useRegisterUser } from "../../hooks/AuthHooks";
 
-const LoginForm = () => {
+const RegisterForm = () => {
+  // Router
+  const navigate = useNavigate();
+
   const formik = useFormik({
     initialValues: {
       username: "",
       password: "",
+      password_confirmation: "",
     },
 
     validationSchema: yup.object({
@@ -35,51 +39,44 @@ const LoginForm = () => {
         .string()
         .required("Password is required")
         .min(6, "Password must be atleast 6 characters long"),
+
+      password_confirmation: yup
+        .string()
+        .required("Password Confirmation is required")
+        .oneOf([yup.ref("password"), null], "Passwords does not match"),
     }),
 
     onSubmit: (values) => {
-      loginQuery.mutate(values);
+      registerQuery.mutate(values);
     },
   });
 
   const toast = useToast();
 
   const onSuccess = (data) => {
-    localStorage.setItem("token", data?.data?.token);
-    localStorage.setItem("role", data?.data?.role);
-    localStorage.setItem("userId", data?.data?.userId);
-
-    if (data?.data?.role === "ROLE_ADMIN")
-      window.location.href = "http://localhost:3000/admin/dashboard";
-    else if (data?.data?.role === "ROLE_STUDENT")
-      window.location.href = "http://localhost:3000/student/dashboard";
-
-    return data;
-  };
-
-  const onError = (errors) => {
     toast({
       position: "top",
       variant: "left-accent",
-      title: "Bad Credentials",
-      description: "Please check your username and password",
-      status: "error",
+      title: "Success",
+      description: "Registered Successfully",
+      status: "success",
       duration: 5000,
       isClosable: true,
     });
-
-    return errors;
+    formik.resetForm();
+    navigate("/login");
+    return data;
   };
 
-  const loginQuery = useLoginUser(onSuccess, onError);
+  const registerQuery = useRegisterUser(onSuccess);
 
   return (
     <Box w="320px">
       <Heading variant="xl" textAlign="center">
-        Log in
+        Sign up
       </Heading>
       <Text textAlign="center" mt={4} color="gray.500">
-        Fill in the fields below to sign into your account
+        Fill in the fields below to create your account
       </Text>
 
       <form onSubmit={formik.handleSubmit}>
@@ -96,6 +93,10 @@ const LoginForm = () => {
             {formik.touched.username && formik.errors.username
               ? formik.errors.username
               : ""}
+            {registerQuery.isError &&
+            registerQuery?.error?.response?.data?.status === 409
+              ? "User already exists"
+              : null}
           </FormHelperText>
         </FormControl>
         <FormControl mt={4}>
@@ -113,21 +114,39 @@ const LoginForm = () => {
               : ""}
           </FormHelperText>
         </FormControl>
+
+        <FormControl mt={4}>
+          <FormLabel>Confirm Password</FormLabel>
+          <Input
+            type="password"
+            focusBorderColor={useColorModeValue("blue.500", "blue.200")}
+            bg={useColorModeValue("white", "whiteAlpha.100")}
+            name="password_confirmation"
+            {...formik.getFieldProps("password_confirmation")}
+          />
+          <FormHelperText color={useColorModeValue("red.500", "red.200")}>
+            {formik.touched.password_confirmation &&
+            formik.errors.password_confirmation
+              ? formik.errors.password_confirmation
+              : ""}
+          </FormHelperText>
+        </FormControl>
+
         <Center mt={8}>
           <Button type="submit" colorScheme="blue" size="lg" w="full">
-            Login
+            Sign up
           </Button>
         </Center>
         <Text mt={4}>
-          Don't have an account, yet?&nbsp;
+          Already have an account?&nbsp;
           <Link
             as={ReachLink}
-            to="/register"
+            to="/login"
             mt={2}
             color={useColorModeValue("blue.500", "blue.200")}
             fontSize="md"
           >
-            Sign up here
+            Log in here
           </Link>
         </Text>
       </form>
@@ -135,4 +154,4 @@ const LoginForm = () => {
   );
 };
 
-export default LoginForm;
+export default RegisterForm;

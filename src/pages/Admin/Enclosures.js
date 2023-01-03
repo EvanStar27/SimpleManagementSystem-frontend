@@ -1,42 +1,37 @@
-import React from "react";
 import {
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  TableContainer,
-  Flex,
-  Input,
-  Button,
-  useDisclosure,
   Box,
-  Heading,
-  useColorModeValue,
-  Text,
+  Button,
   Center,
+  Flex,
+  Heading,
+  Input,
+  Table,
+  Tag,
+  Tbody,
+  Td,
+  Text,
+  Th,
+  Thead,
+  Tr,
+  useColorModeValue,
+  useDisclosure,
 } from "@chakra-ui/react";
+import React, { useState } from "react";
 import {
   HiOutlineMagnifyingGlassPlus,
   HiOutlinePencil,
   HiOutlinePlus,
   HiOutlineTrash,
 } from "react-icons/hi2";
-import { useState } from "react";
-import CourseEditForm from "../../components/forms/Courses/CourseEditForm";
-import { useFetchAllCourses } from "../../hooks/CourseHooks";
-import CourseAddForm from "../../components/forms/Courses/CourseAddForm";
-import CourseDeleteForm from "../../components/forms/Courses/CourseDeleteForm";
-import { Link } from "react-router-dom";
+import { useFetchAllEnclosures } from "../../hooks/EnclosureHooks";
+import EnclosureAddForm from "../../components/forms/Enclosures/EnclosureAddForm";
+import EnclosureEditForm from "../../components/forms/Enclosures/EnclosureEditForm";
+import EnclosureDeleteForm from "../../components/forms/Enclosures/EnclosureDeleteForm";
 
-const Courses = ({ isTab }) => {
-  // States
-  const [course, setCourse] = useState({});
+const Enclosures = ({ isTab }) => {
+  // State
+  const [enclosure, setEnclosure] = useState({});
   const [search, setSearch] = useState("");
-
-  // Queries
-  const { isLoading, isSuccess, data } = useFetchAllCourses(search);
 
   // Theme
   let theadBgColor = useColorModeValue("blue.400", "blue.200");
@@ -50,35 +45,38 @@ const Courses = ({ isTab }) => {
   const deleteModal = useDisclosure();
 
   // handlers
-  const handleEditCourse = (course) => {
-    setCourse(course);
+  const handleEditEnclosure = (enclosure) => {
+    setEnclosure(enclosure);
     editModal.onOpen();
   };
 
-  const handleDeleteCourse = (course) => {
-    setCourse(course);
+  const handleDeleteEnclosure = (enclosure) => {
+    setEnclosure(enclosure);
     deleteModal.onOpen();
   };
+
+  // Queries
+  const { isLoading, isSuccess, data } = useFetchAllEnclosures();
 
   return isSuccess && !isLoading ? (
     <>
       {/* Modals */}
-      <CourseAddForm
-        title="Add Course"
+      <EnclosureAddForm
+        title="Add Enclosure"
         isOpen={addModal.isOpen}
         onClose={addModal.onClose}
       />
 
-      <CourseEditForm
-        course={course}
-        title="Edit Course"
+      <EnclosureEditForm
+        title="Edit Enclosure"
+        enclosure={enclosure}
         isOpen={editModal.isOpen}
         onClose={editModal.onClose}
       />
 
-      <CourseDeleteForm
-        course={course}
+      <EnclosureDeleteForm
         title="Warning!"
+        enclosure={enclosure}
         isOpen={deleteModal.isOpen}
         onClose={deleteModal.onClose}
       />
@@ -86,7 +84,7 @@ const Courses = ({ isTab }) => {
       {/* Content */}
       {!isTab ? (
         <Heading size="md" mt={24} letterSpacing="wider">
-          Courses
+          Enclosures
         </Heading>
       ) : null}
 
@@ -94,67 +92,84 @@ const Courses = ({ isTab }) => {
         <Flex mt={4} justifyContent="space-between">
           <Button colorScheme="blue" onClick={addModal.onOpen}>
             <HiOutlinePlus size={24} />
-            <Text display={{ xs: "none", sm: "block" }}>&nbsp; Add New</Text>
+            &nbsp; Add New
           </Button>
 
           <Input
             w={64}
             placeholder="Search"
             focusBorderColor={theadBgColor}
-            onChange={(e) => setSearch(e.target.value)}
+            // onChange={(e) => setSearch(e.target.value)}
           />
         </Flex>
 
         {data?.data?.length ? (
-          <TableContainer mt={4}>
+          <Box overflowX="auto" maxW="100%" mt={4}>
             <Table variant="unstyled">
               <Thead>
                 <Tr>
                   <Th isNumeric color={theadFntColor}>
                     ID
                   </Th>
-                  <Th color={theadFntColor}>Course Name</Th>
-                  <Th color={theadFntColor}>Description</Th>
+                  <Th color={theadFntColor}>Name</Th>
+                  <Th color={theadFntColor}>Required</Th>
+                  <Th color={theadFntColor}>File Types</Th>
+                  <Th color={theadFntColor}>File Size</Th>
+                  <Th color={theadFntColor}>Type</Th>
                   <Th color={theadFntColor}>Actions</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {data?.data.map((course) => (
-                  <Tr key={course.courseId} _odd={{ bg: stripeColor }}>
-                    <Td isNumeric>{course.courseId}</Td>
-                    <Td>{course.courseName}</Td>
-                    <Td>{course.description}</Td>
+                {data?.data.map((enclosure) => (
+                  <Tr
+                    key={enclosure.enclosureId}
+                    _odd={{
+                      bg: stripeColor,
+                    }}
+                  >
+                    <Td isNumeric>{enclosure.enclosureId}</Td>
+                    <Td>{enclosure.enclosureName}</Td>
+                    <Td>
+                      {enclosure.required ? (
+                        <Tag colorScheme="blue">True</Tag>
+                      ) : (
+                        <Tag colorScheme="orange">False</Tag>
+                      )}
+                    </Td>
+                    <Td>
+                      <Flex gap={2} wrap="wrap">
+                        {enclosure.fileTypes.map((fileType) => (
+                          <Tag key={fileType} colorScheme="blue">
+                            {fileType.split("/")[1]}
+                          </Tag>
+                        ))}
+                      </Flex>
+                    </Td>
+                    <Td>{enclosure.fileSize / 1024 / 1024} MB</Td>
+                    <Td>{enclosure.type}</Td>
                     <Td>
                       <Flex gap={4}>
                         <Button
                           colorScheme="blue"
                           variant="outline"
-                          onClick={() => handleEditCourse(course)}
+                          onClick={() => handleEditEnclosure(enclosure)}
                         >
                           <HiOutlinePencil />
                         </Button>
                         <Button
                           colorScheme="pink"
                           variant="outline"
-                          onClick={() => handleDeleteCourse(course)}
+                          onClick={() => handleDeleteEnclosure(enclosure)}
                         >
                           <HiOutlineTrash />
                         </Button>
-                        <Link
-                          to={`/admin/management/courses/applicants/${course.courseId}`}
-                          state={course}
-                        >
-                          <Button variant="outline" colorScheme="orange">
-                            <HiOutlineMagnifyingGlassPlus />
-                          </Button>
-                        </Link>
                       </Flex>
                     </Td>
                   </Tr>
                 ))}
               </Tbody>
             </Table>
-          </TableContainer>
+          </Box>
         ) : data?.data?.length === 0 && search !== "" ? (
           <>
             <Text size="md" mt={4}>
@@ -170,12 +185,12 @@ const Courses = ({ isTab }) => {
           <>
             <Center>
               <Heading mt={4} size="lg">
-                Course is empty
+                Enclosure is empty
               </Heading>
             </Center>
             <Center>
               <Text color="slategray">
-                Click on 'Add New' to add new courses.
+                Click on 'Add New' to add new enclosure.
               </Text>
             </Center>
           </>
@@ -187,4 +202,4 @@ const Courses = ({ isTab }) => {
   );
 };
 
-export default Courses;
+export default Enclosures;

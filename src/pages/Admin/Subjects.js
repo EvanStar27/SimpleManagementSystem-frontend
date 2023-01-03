@@ -1,42 +1,37 @@
-import React from "react";
 import {
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  TableContainer,
-  Flex,
-  Input,
-  Button,
-  useDisclosure,
   Box,
-  Heading,
-  useColorModeValue,
-  Text,
+  Button,
   Center,
+  Flex,
+  Heading,
+  Input,
+  Table,
+  TableContainer,
+  Tbody,
+  Td,
+  Text,
+  Th,
+  Thead,
+  Tr,
+  useColorModeValue,
+  useDisclosure,
 } from "@chakra-ui/react";
+import React, { useState } from "react";
+import { useFetchAllSubject } from "../../hooks/SubjectHooks";
 import {
   HiOutlineMagnifyingGlassPlus,
   HiOutlinePencil,
   HiOutlinePlus,
   HiOutlineTrash,
 } from "react-icons/hi2";
-import { useState } from "react";
-import CourseEditForm from "../../components/forms/Courses/CourseEditForm";
-import { useFetchAllCourses } from "../../hooks/CourseHooks";
-import CourseAddForm from "../../components/forms/Courses/CourseAddForm";
-import CourseDeleteForm from "../../components/forms/Courses/CourseDeleteForm";
-import { Link } from "react-router-dom";
+import SubjectAddForm from "../../components/forms/Subjects/SubjectAddForm";
+import SubjectUpdateForm from "../../components/forms/Subjects/SubjectUpdateForm";
+import SubjectDeleteForm from "../../components/forms/Subjects/SubjectDeleteForm";
 
-const Courses = ({ isTab }) => {
-  // States
-  const [course, setCourse] = useState({});
+const Subjects = ({ isTab }) => {
+  // State
+  const [subject, setSubject] = useState({});
   const [search, setSearch] = useState("");
-
-  // Queries
-  const { isLoading, isSuccess, data } = useFetchAllCourses(search);
 
   // Theme
   let theadBgColor = useColorModeValue("blue.400", "blue.200");
@@ -50,35 +45,38 @@ const Courses = ({ isTab }) => {
   const deleteModal = useDisclosure();
 
   // handlers
-  const handleEditCourse = (course) => {
-    setCourse(course);
+  const handleEditSubject = (subject) => {
+    setSubject(subject);
     editModal.onOpen();
   };
 
-  const handleDeleteCourse = (course) => {
-    setCourse(course);
+  const handleDeleteSubject = (subject) => {
+    setSubject(subject);
     deleteModal.onOpen();
   };
+
+  // Queries
+  const { isLoading, isSuccess, data } = useFetchAllSubject();
 
   return isSuccess && !isLoading ? (
     <>
       {/* Modals */}
-      <CourseAddForm
-        title="Add Course"
+      <SubjectAddForm
+        title="Add Subject"
         isOpen={addModal.isOpen}
         onClose={addModal.onClose}
       />
 
-      <CourseEditForm
-        course={course}
-        title="Edit Course"
+      <SubjectUpdateForm
+        title="Edit Subject"
+        subject={subject}
         isOpen={editModal.isOpen}
         onClose={editModal.onClose}
       />
 
-      <CourseDeleteForm
-        course={course}
+      <SubjectDeleteForm
         title="Warning!"
+        subject={subject}
         isOpen={deleteModal.isOpen}
         onClose={deleteModal.onClose}
       />
@@ -86,7 +84,7 @@ const Courses = ({ isTab }) => {
       {/* Content */}
       {!isTab ? (
         <Heading size="md" mt={24} letterSpacing="wider">
-          Courses
+          Subjects
         </Heading>
       ) : null}
 
@@ -94,14 +92,14 @@ const Courses = ({ isTab }) => {
         <Flex mt={4} justifyContent="space-between">
           <Button colorScheme="blue" onClick={addModal.onOpen}>
             <HiOutlinePlus size={24} />
-            <Text display={{ xs: "none", sm: "block" }}>&nbsp; Add New</Text>
+            &nbsp; Add New
           </Button>
 
           <Input
             w={64}
             placeholder="Search"
             focusBorderColor={theadBgColor}
-            onChange={(e) => setSearch(e.target.value)}
+            // onChange={(e) => setSearch(e.target.value)}
           />
         </Flex>
 
@@ -114,40 +112,37 @@ const Courses = ({ isTab }) => {
                     ID
                   </Th>
                   <Th color={theadFntColor}>Course Name</Th>
-                  <Th color={theadFntColor}>Description</Th>
+                  <Th color={theadFntColor}>Subject Name</Th>
                   <Th color={theadFntColor}>Actions</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {data?.data.map((course) => (
-                  <Tr key={course.courseId} _odd={{ bg: stripeColor }}>
-                    <Td isNumeric>{course.courseId}</Td>
-                    <Td>{course.courseName}</Td>
-                    <Td>{course.description}</Td>
+                {data?.data.map((subject) => (
+                  <Tr
+                    key={subject.subjectId}
+                    _odd={{
+                      bg: stripeColor,
+                    }}
+                  >
+                    <Td isNumeric>{subject.subjectId}</Td>
+                    <Td>{subject.courseName}</Td>
+                    <Td>{subject.subjectName}</Td>
                     <Td>
                       <Flex gap={4}>
                         <Button
                           colorScheme="blue"
                           variant="outline"
-                          onClick={() => handleEditCourse(course)}
+                          onClick={() => handleEditSubject(subject)}
                         >
                           <HiOutlinePencil />
                         </Button>
                         <Button
                           colorScheme="pink"
                           variant="outline"
-                          onClick={() => handleDeleteCourse(course)}
+                          onClick={() => handleDeleteSubject(subject)}
                         >
                           <HiOutlineTrash />
                         </Button>
-                        <Link
-                          to={`/admin/management/courses/applicants/${course.courseId}`}
-                          state={course}
-                        >
-                          <Button variant="outline" colorScheme="orange">
-                            <HiOutlineMagnifyingGlassPlus />
-                          </Button>
-                        </Link>
                       </Flex>
                     </Td>
                   </Tr>
@@ -170,12 +165,12 @@ const Courses = ({ isTab }) => {
           <>
             <Center>
               <Heading mt={4} size="lg">
-                Course is empty
+                Subject is empty
               </Heading>
             </Center>
             <Center>
               <Text color="slategray">
-                Click on 'Add New' to add new courses.
+                Click on 'Add New' to add new subjects.
               </Text>
             </Center>
           </>
@@ -187,4 +182,4 @@ const Courses = ({ isTab }) => {
   );
 };
 
-export default Courses;
+export default Subjects;
